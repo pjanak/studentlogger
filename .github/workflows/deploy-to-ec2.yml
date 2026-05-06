@@ -1,0 +1,29 @@
+name: Deploy to AWS EC2
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.AWS_EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.AWS_EC2_KEY }}
+          script: /home/ubuntu/deploy.sh
+
+      - name: Notify Deployment Success
+        if: success()
+        run: echo "✅ Deployment to AWS EC2 successful!"
+
+      - name: Notify Deployment Failure
+        if: failure()
+        run: echo "❌ Deployment to AWS EC2 failed!"
