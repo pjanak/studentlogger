@@ -1,23 +1,17 @@
 import { useState } from 'react'
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
+
 export default function Contact() {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    company: '',
     message: ''
   })
   const [submitted, setSubmitted] = useState(false)
   const [errors, setErrors] = useState({})
-
-  const validateForm = () => {
-    const newErrors = {}
-    if (!formData.name.trim()) newErrors.name = 'Name is required'
-    if (!formData.email.trim()) newErrors.email = 'Email is required'
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) newErrors.email = 'Please enter a valid email'
-    if (!formData.message.trim()) newErrors.message = 'Message is required'
-    return newErrors
-  }
+  const [loading, setLoading] = useState(false)
+  const [serverError, setServerError] = useState('')
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -25,42 +19,79 @@ export default function Contact() {
       ...prev,
       [name]: value
     }))
+    // Clear error when user starts typing
     if (errors[name]) {
       setErrors(prev => ({
         ...prev,
         [name]: ''
       }))
     }
+    setServerError('')
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    const newErrors = validateForm()
+    setLoading(true)
+    setServerError('')
 
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors)
-      return
+    try {
+      const response = await fetch(`${API_URL}/api/contact`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        // Handle validation errors
+        if (data.errors) {
+          const errorMap = {}
+          data.errors.forEach(err => {
+            errorMap[err.field] = err.message
+          })
+          setErrors(errorMap)
+        } else {
+          setServerError(data.message || 'An error occurred. Please try again.')
+        }
+        return
+      }
+
+      // Success
+      setSubmitted(true)
+      setFormData({ name: '', email: '', message: '' })
+      setErrors({})
+
+      // Auto-hide success message after 5 seconds
+      setTimeout(() => {
+        setSubmitted(false)
+      }, 5000)
+
+    } catch (error) {
+      console.error('Form submission error:', error)
+      setServerError('Unable to connect to server. Please try again later.')
+    } finally {
+      setLoading(false)
     }
-
-    console.log('Form submitted:', formData)
-    setSubmitted(true)
-    setFormData({ name: '', email: '', company: '', message: '' })
-    setErrors({})
-
-    setTimeout(() => {
-      setSubmitted(false)
-    }, 5000)
   }
 
   return (
     <section id="contact" className="contact">
       <div className="container">
         <h2>Interested in StudentLogger.com?</h2>
-        <p>Send us a message with your inquiry. We'll respond promptly to discuss terms and pricing.</p>
+        <p>Send us your inquiry and we'll get back to you within 24 hours.</p>
 
         {submitted && (
           <div className="success-message" role="status" aria-live="polite">
-            ✓ Thank you! We'll get back to you soon.
+            ✓ Thank you! Check your email for confirmation.
+          </div>
+        )}
+
+        {serverError && (
+          <div className="error-message" role="alert" aria-live="polite">
+            {serverError}
           </div>
         )}
 
@@ -80,9 +111,11 @@ export default function Contact() {
               name="name"
               value={formData.name}
               onChange={handleChange}
+              placeholder="Your full name"
               aria-required="true"
               aria-describedby={errors.name ? "name-error" : undefined}
               aria-invalid={errors.name ? 'true' : 'false'}
+              disabled={loading}
             />
             {errors.name && (
               <p id="name-error" className="error-message" role="alert">{errors.name}</p>
@@ -99,26 +132,15 @@ export default function Contact() {
               name="email"
               value={formData.email}
               onChange={handleChange}
+              placeholder="your@email.com"
               aria-required="true"
               aria-describedby={errors.email ? "email-error" : undefined}
               aria-invalid={errors.email ? 'true' : 'false'}
+              disabled={loading}
             />
             {errors.email && (
               <p id="email-error" className="error-message" role="alert">{errors.email}</p>
             )}
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="company">
-              Company/Organization
-            </label>
-            <input
-              type="text"
-              id="company"
-              name="company"
-              value={formData.company}
-              onChange={handleChange}
-            />
           </div>
 
           <div className="form-group">
@@ -134,21 +156,26 @@ export default function Contact() {
               aria-required="true"
               aria-describedby={errors.message ? "message-error" : undefined}
               aria-invalid={errors.message ? 'true' : 'false'}
+              disabled={loading}
             ></textarea>
             {errors.message && (
               <p id="message-error" className="error-message" role="alert">{errors.message}</p>
             )}
           </div>
 
-          <button type="submit" className="btn btn-primary" aria-label="Send your inquiry about studentlogger.com">
-            Send Inquiry
+          <button
+            type="submit"
+            className="btn btn-primary"
+            disabled={loading}
+            aria-label="Send your inquiry about studentlogger.com"
+          >
+            {loading ? 'Sending...' : 'Send Inquiry'}
           </button>
         </form>
 
-        <div className="contact-info">
-          <p>Or reach out directly:</p>
-          <p><strong>Email:</strong> <a href="mailto:contact@example.com">contact@example.com</a></p>
-        </div>
+        <p style={{ textAlign: 'center', marginTop: '1.5rem', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+          We respect your privacy. Your information will only be used to respond to your inquiry.
+        </p>
       </div>
     </section>
   )

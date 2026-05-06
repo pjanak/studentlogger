@@ -36,19 +36,36 @@ studentlogger/
 
 ## Getting Started
 
-### Install Dependencies
+### Quick Start (Frontend Only)
 
 ```bash
 npm install
-```
-
-### Run Development Server
-
-```bash
 npm run dev
 ```
 
-The site will open at `http://localhost:3000` with hot reloading enabled.
+Frontend opens at `http://localhost:3000`
+
+### Full Setup (With Email & Form Submission)
+
+**Terminal 1 - Frontend:**
+```bash
+npm install
+npm run dev
+```
+
+**Terminal 2 - Backend:**
+```bash
+cd backend
+npm install
+npm run dev
+```
+
+Backend runs at `http://localhost:5000`
+
+**Setup Configuration:**
+1. Copy `backend/.env.example` → `backend/.env`
+2. Set up Gmail app password (see [SETUP.md](SETUP.md))
+3. Update `ADMIN_EMAIL` in `backend/.env`
 
 ### Build for Production
 
