@@ -62,14 +62,21 @@ body {
 }
 
 .nav-link {
-  text-decoration: none;
+  background: none;
+  border: none;
   color: var(--text-color);
   font-weight: 500;
+  font-size: 1rem;
+  cursor: pointer;
   transition: color 0.3s;
+  text-decoration: none;
+  padding: 0;
 }
 
-.nav-link:hover {
+.nav-link:hover,
+.nav-link.active {
   color: var(--primary-color);
+  border-bottom: 2px solid var(--primary-color);
 }
 
 /* ===== Hero Section ===== */
@@ -298,6 +305,26 @@ body {
 
 .contact-info a:hover {
   text-decoration: underline;
+}
+
+.success-message {
+  background-color: var(--secondary-color);
+  color: white;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  animation: slideIn 0.3s ease-in;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* ===== Footer ===== */
