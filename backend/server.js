@@ -171,13 +171,18 @@ app.post('/api/contact', validateContactForm, async (req, res) => {
       `
     }
 
-    // Send both emails
-    await Promise.all([
-      transporter.sendMail(adminMailOptions),
-      transporter.sendMail(userMailOptions)
-    ])
-
-    console.log(`Inquiry received from ${email}`)
+    // Send both emails with error handling
+    try {
+      const [adminResult, userResult] = await Promise.all([
+        transporter.sendMail(adminMailOptions),
+        transporter.sendMail(userMailOptions)
+      ])
+      console.log(`Inquiry received from ${email}`)
+      console.log(`Admin email sent, User confirmation email sent to ${email}`)
+    } catch (emailError) {
+      console.error(`Email sending error for ${email}:`, emailError.message)
+      throw emailError
+    }
 
     // Success response
     res.status(200).json({
