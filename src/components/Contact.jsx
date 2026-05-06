@@ -1,6 +1,7 @@
 import { useState } from 'react'
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
+// Use relative URL for API calls - works with Nginx reverse proxy
+const API_URL = import.meta.env.VITE_API_URL || ''
 
 export default function Contact() {
   const [formData, setFormData] = useState({
