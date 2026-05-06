@@ -2,6 +2,8 @@
 
 A modern React single-page application built with Vite to showcase and sell the premium domain **studentlogger.com**.
 
+[![Deploy to AWS EC2](https://github.com/pjanak/studentlogger/actions/workflows/deploy-to-ec2.yml/badge.svg)](https://github.com/pjanak/studentlogger/actions/workflows/deploy-to-ec2.yml)
+
 ## Features
 
 - **React 18** - Modern component-based architecture
