@@ -13,6 +13,7 @@ function App() {
   const aboutRef = useRef(null)
   const valueRef = useRef(null)
   const contactRef = useRef(null)
+  const mainRef = useRef(null)
 
   const scrollToSection = (sectionId) => {
     setActiveSection(sectionId)
@@ -25,17 +26,27 @@ function App() {
 
     if (refs[sectionId]?.current) {
       refs[sectionId].current.scrollIntoView({ behavior: 'smooth' })
+      refs[sectionId].current.focus()
     }
   }
 
   return (
     <div className="App">
+      {/* Skip to main content link for keyboard users */}
+      <a href="#main-content" className="skip-link">
+        Skip to main content
+      </a>
+
       <Navbar activeSection={activeSection} onNavigate={scrollToSection} />
-      <div ref={homeRef}><Hero onCTA={scrollToSection} /></div>
-      <div ref={aboutRef}><About /></div>
-      <div ref={valueRef}><Value /></div>
-      <Uses />
-      <div ref={contactRef}><Contact /></div>
+
+      <main ref={mainRef} id="main-content">
+        <div ref={homeRef} tabIndex={-1}><Hero onCTA={scrollToSection} /></div>
+        <div ref={aboutRef} tabIndex={-1}><About /></div>
+        <div ref={valueRef} tabIndex={-1}><Value /></div>
+        <Uses />
+        <div ref={contactRef} tabIndex={-1}><Contact /></div>
+      </main>
+
       <Footer />
     </div>
   )
