@@ -78,8 +78,8 @@ const validateContactForm = [
   body('email')
     .trim()
     .isEmail().withMessage('Valid email is required')
-    .isLength({ max: 255 }).withMessage('Email must be less than 255 characters')
-    .normalizeEmail(),
+    .isLength({ max: 255 }).withMessage('Email must be less than 255 characters'),
+    // Note: NOT using normalizeEmail() to preserve email format exactly as entered
 
   body('message')
     .trim()
