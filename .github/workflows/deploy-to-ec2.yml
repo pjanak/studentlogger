@@ -46,6 +46,8 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.AWS_EC2_KEY }}" | base64 -d > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
+          # Verify the key was decoded correctly
+          head -1 ~/.ssh/deploy_key | grep -q "BEGIN OPENSSH PRIVATE KEY" || (echo "SSH key decode failed" && exit 1)
           ssh-keyscan -H ${{ secrets.AWS_EC2_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
 
       - name: Deploy to EC2
