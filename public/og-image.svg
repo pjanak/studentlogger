@@ -1,0 +1,80 @@
+<svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
+  <!-- Gradient Background -->
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#764ba2;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#f093fb;stop-opacity:1" />
+    </linearGradient>
+
+    <!-- Subtle overlay gradient for depth -->
+    <linearGradient id="overlayGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0.1" />
+      <stop offset="100%" style="stop-color:#000000;stop-opacity:0.15" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bgGradient)"/>
+  <rect width="1200" height="630" fill="url(#overlayGradient)"/>
+
+  <!-- Decorative circles (subtle) -->
+  <circle cx="150" cy="100" r="80" fill="#ffffff" opacity="0.08"/>
+  <circle cx="1050" cy="520" r="120" fill="#ffffff" opacity="0.06"/>
+  <circle cx="600" cy="630" r="150" fill="#ffffff" opacity="0.05"/>
+
+  <!-- Main Content Container -->
+  <g id="content">
+    <!-- Icon Container 1: Book/Learning (top left) -->
+    <g transform="translate(80, 80)">
+      <circle cx="0" cy="0" r="40" fill="#ffffff" opacity="0.15"/>
+      <!-- Book icon -->
+      <path d="M -8 -12 L -8 12 L 8 12 L 8 -12 Z" stroke="#ffffff" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <line x1="-8" y1="0" x2="8" y2="0" stroke="#ffffff" stroke-width="2"/>
+      <line x1="0" y1="-12" x2="0" y2="12" stroke="#ffffff" stroke-width="1.5" opacity="0.7"/>
+    </g>
+
+    <!-- Icon Container 2: Chart/Tracking (top right) -->
+    <g transform="translate(1100, 80)">
+      <circle cx="0" cy="0" r="40" fill="#ffffff" opacity="0.15"/>
+      <!-- Chart icon -->
+      <line x1="-10" y1="8" x2="-10" y2="-4" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+      <line x1="0" y1="8" x2="0" y2="-8" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+      <line x1="10" y1="8" x2="10" y2="-12" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+      <polyline points="-10,-4 0,-8 10,-12" stroke="#ffffff" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="0.7"/>
+    </g>
+
+    <!-- Icon Container 3: Graduation/Education (bottom left) -->
+    <g transform="translate(100, 550)">
+      <circle cx="0" cy="0" r="40" fill="#ffffff" opacity="0.15"/>
+      <!-- Graduation cap icon -->
+      <polygon points="-12,0 12,0 18,4 -18,4" fill="none" stroke="#ffffff" stroke-width="2" stroke-linejoin="round"/>
+      <line x1="0" y1="4" x2="0" y2="10" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+      <circle cx="6" cy="12" r="2" fill="#ffffff"/>
+    </g>
+
+    <!-- Main Text -->
+    <text x="600" y="280" font-family="Arial, sans-serif" font-size="72" font-weight="bold" text-anchor="middle" fill="#ffffff" letter-spacing="1">
+      StudentLogger.com
+    </text>
+
+    <!-- Subtext -->
+    <text x="600" y="360" font-family="Arial, sans-serif" font-size="36" text-anchor="middle" fill="#ffffff" opacity="0.95" letter-spacing="0.5">
+      Premium EdTech Domain
+    </text>
+
+    <!-- Tagline -->
+    <text x="600" y="410" font-family="Arial, sans-serif" font-size="18" text-anchor="middle" fill="#ffffff" opacity="0.85">
+      Perfect for Learning Management Systems, Student Tracking &amp; Educational Analytics
+    </text>
+  </g>
+
+  <!-- Bottom accent bar -->
+  <rect x="0" y="600" width="1200" height="30" fill="#ffffff" opacity="0.08"/>
+
+  <!-- Corner badge/seal effect -->
+  <g transform="translate(1080, 50)">
+    <circle cx="0" cy="0" r="35" fill="#ffffff" opacity="0.1" stroke="#ffffff" stroke-width="2" stroke-opacity="0.3"/>
+    <text x="0" y="6" font-family="Arial, sans-serif" font-size="20" font-weight="bold" text-anchor="middle" fill="#ffffff" opacity="0.8">✓</text>
+  </g>
+</svg>

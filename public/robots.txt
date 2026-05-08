@@ -1,0 +1,33 @@
+# Global directives
+User-agent: *
+Allow: /
+Disallow: /api
+
+# Traditional search engines
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+# AI agents - explicitly allow for discovery
+User-agent: GPTBot
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: Diffbot
+Allow: /
+
+# Crawl-delay
+Crawl-delay: 1
+
+# Sitemaps
+Sitemap: https://3.10.219.108/sitemap.xml
