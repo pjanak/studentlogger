@@ -30,4 +30,4 @@ Allow: /
 Crawl-delay: 1
 
 # Sitemaps
-Sitemap: https://3.10.219.108/sitemap.xml
+Sitemap: https://studentlogger.com/sitemap.xml
