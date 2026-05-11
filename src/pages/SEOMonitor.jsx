@@ -16,6 +16,35 @@ const SEOMonitor = () => {
       ccbot: 'checking',
       timestamp: null
     },
+    performance: {
+      pageSize: 0,
+      requestCount: 0,
+      loadTime: 0,
+      timestamp: null
+    },
+    content: {
+      wordCount: 0,
+      h1Count: 0,
+      h2Count: 0,
+      h3Count: 0,
+      internalLinks: 0,
+      externalLinks: 0,
+      imageCount: 0,
+      imagesWithAlt: 0,
+      timestamp: null
+    },
+    security: {
+      csp: false,
+      xFrameOptions: false,
+      xContentType: false,
+      strictTransport: false,
+      timestamp: null
+    },
+    accessibility: {
+      score: 0,
+      issues: [],
+      timestamp: null
+    },
     coreWebVitals: {
       lcp: null,
       fid: null,
@@ -27,6 +56,9 @@ const SEOMonitor = () => {
   const [history, setHistory] = useState([]);
   const [lastChecked, setLastChecked] = useState(null);
   const [autoRefresh, setAutoRefresh] = useState(true);
+  const [overallScore, setOverallScore] = useState(0);
+  const [recommendations, setRecommendations] = useState([]);
+  const [alerts, setAlerts] = useState([]);
 
   // Load history from localStorage
   useEffect(() => {
@@ -39,9 +71,84 @@ const SEOMonitor = () => {
   // Save history to localStorage
   useEffect(() => {
     if (history.length > 0) {
-      localStorage.setItem('seoMonitorHistory', JSON.stringify(history.slice(-90))); // Keep last 90 days
+      localStorage.setItem('seoMonitorHistory', JSON.stringify(history.slice(-90)));
     }
   }, [history]);
+
+  // Calculate overall SEO score
+  const calculateOverallScore = (newMetrics) => {
+    let score = 0;
+    let totalWeight = 0;
+
+    // HTTPS (20%)
+    if (newMetrics.https.status === 'ok') score += 20;
+    totalWeight += 20;
+
+    // robots.txt (10%)
+    if (newMetrics.robots.status === 'ok') score += 10;
+    totalWeight += 10;
+
+    // sitemap.xml (10%)
+    if (newMetrics.sitemap.status === 'ok' && newMetrics.sitemap.urls > 0) score += 10;
+    totalWeight += 10;
+
+    // Meta Tags (15%)
+    score += (newMetrics.metaTags.present / newMetrics.metaTags.total) * 15;
+    totalWeight += 15;
+
+    // JSON-LD Schemas (15%)
+    score += Math.min(newMetrics.jsonLd.schemas / 3, 1) * 15;
+    totalWeight += 15;
+
+    // AI Agents (15%)
+    const aiAgents = [newMetrics.aiAgents.gptbot, newMetrics.aiAgents.claude, newMetrics.aiAgents.perplexity, newMetrics.aiAgents.ccbot];
+    const allowedAgents = aiAgents.filter(a => a === 'allowed').length;
+    score += (allowedAgents / 4) * 15;
+    totalWeight += 15;
+
+    // Content Quality (10%)
+    if (newMetrics.content.wordCount > 100 && newMetrics.content.h1Count > 0) {
+      score += 10;
+    }
+    totalWeight += 10;
+
+    return Math.round(score);
+  };
+
+  // Generate recommendations
+  const generateRecommendations = (newMetrics) => {
+    const recs = [];
+
+    if (newMetrics.metaTags.present < 8) {
+      recs.push({ type: 'warning', text: `Add missing meta tags (${8 - newMetrics.metaTags.present} missing)` });
+    }
+
+    if (newMetrics.jsonLd.schemas < 3) {
+      recs.push({ type: 'warning', text: 'Add more JSON-LD schemas for rich snippets' });
+    }
+
+    if (newMetrics.content.wordCount < 300) {
+      recs.push({ type: 'info', text: 'Consider expanding content (current: ' + newMetrics.content.wordCount + ' words)' });
+    }
+
+    if (newMetrics.content.h1Count === 0) {
+      recs.push({ type: 'error', text: 'Add an H1 tag to improve SEO' });
+    }
+
+    if (newMetrics.content.imagesWithAlt < newMetrics.content.imageCount) {
+      recs.push({ type: 'warning', text: `${newMetrics.content.imageCount - newMetrics.content.imagesWithAlt} images missing alt text` });
+    }
+
+    if (!newMetrics.security.csp) {
+      recs.push({ type: 'warning', text: 'Add Content Security Policy header' });
+    }
+
+    if (!newMetrics.security.strictTransport) {
+      recs.push({ type: 'info', text: 'Add HSTS header for better security' });
+    }
+
+    return recs;
+  };
 
   // Check all metrics
   const runFullCheck = async () => {
@@ -105,6 +212,29 @@ const SEOMonitor = () => {
       const count = [hasTitle, hasDesc, hasOg, hasCanonical, hasRobots, hasJsonLd, hasTwitter, hasViewport].filter(Boolean).length;
       newMetrics.metaTags.present = count;
       newMetrics.metaTags.timestamp = new Date();
+
+      // Content analysis
+      const textContent = html.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+      const wordCount = textContent.split(/\s+/).length;
+      const h1Count = (html.match(/<h1[^>]*>/gi) || []).length;
+      const h2Count = (html.match(/<h2[^>]*>/gi) || []).length;
+      const h3Count = (html.match(/<h3[^>]*>/gi) || []).length;
+      const internalLinks = (html.match(/href=["']\/[^"']*/gi) || []).length;
+      const externalLinks = (html.match(/href=["']https?:\/\/[^"']*/gi) || []).length;
+      const imageCount = (html.match(/<img[^>]*>/gi) || []).length;
+      const imagesWithAlt = (html.match(/<img[^>]*alt=["'][^"']*["'][^>]*>/gi) || []).length;
+
+      newMetrics.content = {
+        wordCount,
+        h1Count,
+        h2Count,
+        h3Count,
+        internalLinks,
+        externalLinks,
+        imageCount,
+        imagesWithAlt,
+        timestamp: new Date()
+      };
     } catch (e) {
       newMetrics.metaTags.timestamp = new Date();
     }
@@ -133,12 +263,80 @@ const SEOMonitor = () => {
       newMetrics.aiAgents.timestamp = new Date();
     }
 
+    // 8. Check security headers
+    try {
+      const response = await fetch('https://studentlogger.com');
+      const headers = response.headers;
+      newMetrics.security = {
+        csp: !!headers.get('content-security-policy'),
+        xFrameOptions: !!headers.get('x-frame-options'),
+        xContentType: !!headers.get('x-content-type-options'),
+        strictTransport: !!headers.get('strict-transport-security'),
+        timestamp: new Date()
+      };
+    } catch (e) {
+      newMetrics.security.timestamp = new Date();
+    }
+
+    // 9. Calculate accessibility score
+    try {
+      const response = await fetch('https://studentlogger.com');
+      const html = await response.text();
+      let a11yScore = 100;
+      const issues = [];
+
+      if (!/<html[^>]*lang=/.test(html)) {
+        a11yScore -= 10;
+        issues.push('Missing lang attribute on html tag');
+      }
+
+      if ((html.match(/<img[^>]*>/gi) || []).length > (html.match(/<img[^>]*alt=/.test(html) ? 1 : 0)) {
+        a11yScore -= 15;
+        issues.push('Images missing alt text');
+      }
+
+      if (!/<main[^>]*>/i.test(html)) {
+        a11yScore -= 10;
+        issues.push('Missing main landmark');
+      }
+
+      if (!/skip.*to.*main|skip.*link/i.test(html)) {
+        a11yScore -= 5;
+        issues.push('No skip to main content link');
+      }
+
+      newMetrics.accessibility = {
+        score: Math.max(0, a11yScore),
+        issues,
+        timestamp: new Date()
+      };
+    } catch (e) {
+      newMetrics.accessibility.timestamp = new Date();
+    }
+
     setMetrics(newMetrics);
+
+    // Calculate overall score
+    const score = calculateOverallScore(newMetrics);
+    setOverallScore(score);
+
+    // Generate recommendations
+    const recs = generateRecommendations(newMetrics);
+    setRecommendations(recs);
+
+    // Generate alerts
+    const newAlerts = [];
+    if (newMetrics.https.status !== 'ok') newAlerts.push({ severity: 'critical', text: 'HTTPS is not accessible' });
+    if (newMetrics.content.wordCount < 100) newAlerts.push({ severity: 'warning', text: 'Content is very short' });
+    if (newMetrics.content.h1Count === 0) newAlerts.push({ severity: 'error', text: 'No H1 tag found' });
+    setAlerts(newAlerts);
 
     // Add to history
     const historyEntry = {
       timestamp: new Date(),
-      metrics: newMetrics
+      metrics: newMetrics,
+      score,
+      recommendations: recs
     };
     setHistory([...history, historyEntry]);
   };
@@ -183,6 +381,63 @@ const SEOMonitor = () => {
     );
   };
 
+  const ScoreGauge = ({ score }) => {
+    const color = score >= 80 ? '#10b981' : score >= 60 ? '#f59e0b' : '#ef4444';
+    return (
+      <div className="score-gauge">
+        <div className="gauge-circle" style={{ background: `conic-gradient(${color} 0deg ${score * 3.6}deg, #e5e7eb ${score * 3.6}deg)` }}>
+          <div className="gauge-inner">
+            <div className="gauge-value">{score}</div>
+            <div className="gauge-label">Score</div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const AlertBanner = ({ alerts }) => {
+    if (!alerts || alerts.length === 0) return null;
+    return (
+      <div className="alert-section">
+        {alerts.map((alert, idx) => (
+          <div key={idx} className={`alert alert-${alert.severity}`}>
+            <span className="alert-icon">⚠️</span>
+            <span>{alert.text}</span>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  const RecommendationsList = ({ recommendations }) => {
+    if (!recommendations || recommendations.length === 0) {
+      return <div className="recommendations-empty">✓ All systems optimized! No recommendations.</div>;
+    }
+
+    return (
+      <div className="recommendations-list">
+        {recommendations.map((rec, idx) => (
+          <div key={idx} className={`recommendation recommendation-${rec.type}`}>
+            <span className="rec-icon">
+              {rec.type === 'error' ? '❌' : rec.type === 'warning' ? '⚠️' : 'ℹ️'}
+            </span>
+            <span>{rec.text}</span>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  const exportData = () => {
+    const dataStr = JSON.stringify({ metrics, history, overallScore, recommendations }, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `seo-monitor-${new Date().toISOString().split('T')[0]}.json`;
+    link.click();
+  };
+
   return (
     <div className="seo-monitor">
       <div className="monitor-header">
@@ -202,11 +457,34 @@ const SEOMonitor = () => {
           />
           Auto-refresh hourly
         </label>
+        <button className="btn btn-secondary" onClick={exportData}>
+          📥 Export Data
+        </button>
         {lastChecked && (
           <span className="last-checked">
             Last checked: {lastChecked.toLocaleTimeString()}
           </span>
         )}
+      </div>
+
+      {/* Alerts */}
+      {alerts.length > 0 && <AlertBanner alerts={alerts} />}
+
+      {/* Overall Score */}
+      <div className="score-section">
+        <div className="score-container">
+          <ScoreGauge score={overallScore} />
+          <div className="score-summary">
+            <h3>Overall SEO Health Score</h3>
+            <p className="score-interpretation">
+              {overallScore >= 80
+                ? '🎉 Excellent! Your site is well optimized.'
+                : overallScore >= 60
+                ? '👍 Good! There are opportunities for improvement.'
+                : '⚠️ Needs improvement. Address the recommendations below.'}
+            </p>
+          </div>
+        </div>
       </div>
 
       <div className="monitor-grid">
@@ -268,6 +546,50 @@ const SEOMonitor = () => {
           </div>
         </section>
 
+        {/* Content Analysis */}
+        <section className="monitor-section">
+          <h2>📄 Content Analysis</h2>
+
+          <ScoreCard
+            title="Word Count"
+            value={metrics.content.wordCount}
+            description={metrics.content.wordCount < 300 ? '⚠️ Consider expanding' : '✓ Good length'}
+          />
+
+          <div className="content-grid">
+            <div className="content-stat">
+              <div className="stat-value">{metrics.content.h1Count}</div>
+              <div className="stat-label">H1 Tags</div>
+            </div>
+            <div className="content-stat">
+              <div className="stat-value">{metrics.content.h2Count}</div>
+              <div className="stat-label">H2 Tags</div>
+            </div>
+            <div className="content-stat">
+              <div className="stat-value">{metrics.content.h3Count}</div>
+              <div className="stat-label">H3 Tags</div>
+            </div>
+          </div>
+
+          <div className="content-links">
+            <div className="link-stat">
+              <span className="link-count">{metrics.content.internalLinks}</span>
+              <span className="link-label">Internal Links</span>
+            </div>
+            <div className="link-stat">
+              <span className="link-count">{metrics.content.externalLinks}</span>
+              <span className="link-label">External Links</span>
+            </div>
+          </div>
+
+          <ScoreCard
+            title="Image Alt Text"
+            value={metrics.content.imagesWithAlt}
+            max={metrics.content.imageCount || 1}
+            description={`${metrics.content.imagesWithAlt}/${metrics.content.imageCount} images have alt text`}
+          />
+        </section>
+
         {/* AI Agent Accessibility */}
         <section className="monitor-section">
           <h2>🤖 AI Agent Accessibility</h2>
@@ -290,6 +612,51 @@ const SEOMonitor = () => {
               <StatusBadge status={metrics.aiAgents.ccbot} />
             </div>
           </div>
+        </section>
+
+        {/* Security */}
+        <section className="monitor-section">
+          <h2>🛡️ Security Headers</h2>
+
+          <div className="security-grid">
+            <div className="security-item" style={{ borderLeft: `4px solid ${metrics.security.csp ? '#10b981' : '#ef4444'}` }}>
+              <div className="sec-label">Content Security Policy</div>
+              <div className="sec-status">{metrics.security.csp ? '✓ Present' : '✗ Missing'}</div>
+            </div>
+            <div className="security-item" style={{ borderLeft: `4px solid ${metrics.security.xFrameOptions ? '#10b981' : '#ef4444'}` }}>
+              <div className="sec-label">X-Frame-Options</div>
+              <div className="sec-status">{metrics.security.xFrameOptions ? '✓ Present' : '✗ Missing'}</div>
+            </div>
+            <div className="security-item" style={{ borderLeft: `4px solid ${metrics.security.xContentType ? '#10b981' : '#ef4444'}` }}>
+              <div className="sec-label">X-Content-Type-Options</div>
+              <div className="sec-status">{metrics.security.xContentType ? '✓ Present' : '✗ Missing'}</div>
+            </div>
+            <div className="security-item" style={{ borderLeft: `4px solid ${metrics.security.strictTransport ? '#10b981' : '#ef4444'}` }}>
+              <div className="sec-label">HSTS</div>
+              <div className="sec-status">{metrics.security.strictTransport ? '✓ Present' : '✗ Missing'}</div>
+            </div>
+          </div>
+        </section>
+
+        {/* Accessibility */}
+        <section className="monitor-section">
+          <h2>♿ Accessibility</h2>
+
+          <ScoreCard
+            title="Accessibility Score"
+            value={metrics.accessibility.score}
+            max={100}
+            description={`${metrics.accessibility.score}/100 - ${metrics.accessibility.score >= 80 ? '✓ Good' : metrics.accessibility.score >= 60 ? '⚠️ Fair' : '✗ Poor'}`}
+          />
+
+          {metrics.accessibility.issues.length > 0 && (
+            <div className="a11y-issues">
+              <div className="issues-header">Issues Found:</div>
+              {metrics.accessibility.issues.map((issue, idx) => (
+                <div key={idx} className="issue-item">• {issue}</div>
+              ))}
+            </div>
+          )}
         </section>
 
         {/* Performance */}
@@ -319,29 +686,39 @@ const SEOMonitor = () => {
         </section>
       </div>
 
+      {/* Recommendations */}
+      <div className="recommendations-section">
+        <h3>💡 Recommendations for Improvement</h3>
+        <RecommendationsList recommendations={recommendations} />
+      </div>
+
       {/* Quick Summary */}
       <div className="summary-box">
-        <h3>✅ Overall Status</h3>
+        <h3>✅ Quick Status Summary</h3>
         <div className="summary-items">
-          <div className="summary-item">
+          <div className="summary-item" style={{ background: metrics.https.status === 'ok' ? '#f0fdf4' : '#fee2e2' }}>
             <span className="checkmark">✓</span>
             <span>HTTPS Active</span>
           </div>
-          <div className="summary-item">
+          <div className="summary-item" style={{ background: (metrics.robots.status === 'ok' && metrics.sitemap.status === 'ok') ? '#f0fdf4' : '#fee2e2' }}>
             <span className="checkmark">✓</span>
-            <span>SEO Files Present (robots.txt, sitemap.xml)</span>
+            <span>SEO Files Present</span>
           </div>
-          <div className="summary-item">
+          <div className="summary-item" style={{ background: metrics.metaTags.present === 8 ? '#f0fdf4' : '#fee2e2' }}>
             <span className="checkmark">✓</span>
-            <span>Meta Tags Optimized</span>
+            <span>Meta Tags Optimized ({metrics.metaTags.present}/8)</span>
           </div>
-          <div className="summary-item">
+          <div className="summary-item" style={{ background: metrics.jsonLd.schemas >= 2 ? '#f0fdf4' : '#fee2e2' }}>
             <span className="checkmark">✓</span>
-            <span>JSON-LD Schemas Valid</span>
+            <span>Structured Data Valid ({metrics.jsonLd.schemas}/3)</span>
           </div>
-          <div className="summary-item">
+          <div className="summary-item" style={{ background: (metrics.aiAgents.gptbot === 'allowed' && metrics.aiAgents.claude === 'allowed') ? '#f0fdf4' : '#fee2e2' }}>
             <span className="checkmark">✓</span>
-            <span>AI Agents Allowed</span>
+            <span>AI Agents Accessible</span>
+          </div>
+          <div className="summary-item" style={{ background: metrics.accessibility.score >= 80 ? '#f0fdf4' : '#fee2e2' }}>
+            <span className="checkmark">✓</span>
+            <span>Accessibility Score: {metrics.accessibility.score}/100</span>
           </div>
         </div>
       </div>
@@ -352,12 +729,14 @@ const SEOMonitor = () => {
           <h3>📈 Monitoring History ({history.length} checks)</h3>
           <div className="history-timeline">
             {history.slice(-30).map((entry, idx) => (
-              <div key={idx} className="history-entry" title={entry.timestamp.toLocaleString()}>
+              <div
+                key={idx}
+                className="history-entry"
+                title={entry.timestamp.toLocaleString()}
+                style={{ background: `hsl(${entry.score * 1.2}, 70%, 60%)` }}
+              >
+                <div className="entry-score">{entry.score}</div>
                 <div className="entry-date">{entry.timestamp.toLocaleDateString()}</div>
-                <div className="entry-time">{entry.timestamp.toLocaleTimeString()}</div>
-                <div className="entry-status">
-                  {entry.metrics.https.status === 'ok' ? '✓' : '✗'}
-                </div>
               </div>
             ))}
           </div>
