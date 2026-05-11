@@ -290,7 +290,9 @@ const SEOMonitor = () => {
         issues.push('Missing lang attribute on html tag');
       }
 
-      if ((html.match(/<img[^>]*>/gi) || []).length > (html.match(/<img[^>]*alt=/.test(html) ? 1 : 0)) {
+      const imageCount = (html.match(/<img[^>]*>/gi) || []).length;
+      const imagesWithAlt = (html.match(/<img[^>]*alt=["'][^"']*["']/gi) || []).length;
+      if (imageCount > imagesWithAlt && imageCount > 0) {
         a11yScore -= 15;
         issues.push('Images missing alt text');
       }
