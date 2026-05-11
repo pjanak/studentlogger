@@ -63,8 +63,8 @@ jobs:
           # Remove old dist directory on remote server to ensure clean deployment
           ssh -i ~/.ssh/ec2_key ${EC2_USER}@${EC2_HOST} "sudo rm -rf ${DEPLOY_PATH}/dist && sudo mkdir -p ${DEPLOY_PATH}/dist && sudo chown -R ${EC2_USER}:${EC2_USER} ${DEPLOY_PATH}/dist" || true
 
-          # Deploy dist folder to EC2
-          rsync -avz -e "ssh -i ~/.ssh/ec2_key" dist/ ${EC2_USER}@${EC2_HOST}:${DEPLOY_PATH}/dist/
+          # Deploy dist folder to EC2 with force option to override all files
+          rsync -avz --force -e "ssh -i ~/.ssh/ec2_key" dist/ ${EC2_USER}@${EC2_HOST}:${DEPLOY_PATH}/dist/
 
           # Reload Nginx to pick up any config changes
           ssh -i ~/.ssh/ec2_key ${EC2_USER}@${EC2_HOST} "sudo systemctl reload nginx"
