@@ -41,6 +41,9 @@ jobs:
         with:
           clean: true
 
+      - name: Reset any local changes
+        run: git reset --hard HEAD
+
       - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
