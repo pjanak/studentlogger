@@ -64,7 +64,13 @@ const SEOMonitor = () => {
   useEffect(() => {
     const stored = localStorage.getItem('seoMonitorHistory');
     if (stored) {
-      setHistory(JSON.parse(stored));
+      const parsedHistory = JSON.parse(stored);
+      // Convert timestamp strings back to Date objects
+      const historyWithDates = parsedHistory.map(entry => ({
+        ...entry,
+        timestamp: new Date(entry.timestamp)
+      }));
+      setHistory(historyWithDates);
     }
   }, []);
 
