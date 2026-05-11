@@ -37,13 +37,6 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     steps:
-      - uses: actions/checkout@v4
-        with:
-          clean: true
-
-      - name: Reset any local changes
-        run: git reset --hard HEAD
-
       - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
