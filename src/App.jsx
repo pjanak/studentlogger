@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import Navbar from './components/Navbar'
 import Hero from './components/Hero'
 import About from './components/About'
@@ -6,17 +7,17 @@ import Value from './components/Value'
 import Uses from './components/Uses'
 import Contact from './components/Contact'
 import Footer from './components/Footer'
+import SEOMonitor from './pages/SEOMonitor'
 
-function App() {
-  const [activeSection, setActiveSection] = useState('home')
+function LandingPage({ scrollToSection, activeSection }) {
   const homeRef = useRef(null)
   const aboutRef = useRef(null)
   const valueRef = useRef(null)
   const contactRef = useRef(null)
   const mainRef = useRef(null)
 
-  const scrollToSection = (sectionId) => {
-    setActiveSection(sectionId)
+  const handleScrollToSection = (sectionId) => {
+    scrollToSection(sectionId)
     const refs = {
       home: homeRef,
       about: aboutRef,
@@ -31,16 +32,15 @@ function App() {
   }
 
   return (
-    <div className="App">
-      {/* Skip to main content link for keyboard users */}
+    <div>
       <a href="#main-content" className="skip-link">
         Skip to main content
       </a>
 
-      <Navbar activeSection={activeSection} onNavigate={scrollToSection} />
+      <Navbar activeSection={activeSection} onNavigate={handleScrollToSection} />
 
       <main ref={mainRef} id="main-content">
-        <div ref={homeRef} tabIndex={-1}><Hero onCTA={scrollToSection} /></div>
+        <div ref={homeRef} tabIndex={-1}><Hero onCTA={handleScrollToSection} /></div>
         <div ref={aboutRef} tabIndex={-1}><About /></div>
         <div ref={valueRef} tabIndex={-1}><Value /></div>
         <Uses />
@@ -49,6 +49,19 @@ function App() {
 
       <Footer />
     </div>
+  )
+}
+
+function App() {
+  const [activeSection, setActiveSection] = useState('home')
+
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<LandingPage scrollToSection={setActiveSection} activeSection={activeSection} />} />
+        <Route path="/admin/seo-monitor" element={<SEOMonitor />} />
+      </Routes>
+    </BrowserRouter>
   )
 }
 
