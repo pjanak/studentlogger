@@ -52,7 +52,15 @@ jobs:
 
       - name: Deploy to EC2
         run: |
-          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no ubuntu@${{ secrets.AWS_EC2_HOST }} '/home/ubuntu/deploy.sh'
+          # Remove old dist directory and create fresh one
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no ubuntu@${{ secrets.AWS_EC2_HOST }} \
+            "sudo rm -rf /var/www/studentlogger/dist && sudo mkdir -p /var/www/studentlogger/dist && sudo chown ubuntu:ubuntu /var/www/studentlogger/dist" || true
+
+          # Copy dist folder using SCP
+          scp -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -r dist/ ubuntu@${{ secrets.AWS_EC2_HOST }}:/var/www/studentlogger/
+
+          # Reload Nginx
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no ubuntu@${{ secrets.AWS_EC2_HOST }} "sudo systemctl reload nginx"
 
       - name: Notify Deployment Success
         if: success()
