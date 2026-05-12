@@ -204,8 +204,14 @@ const SEOMonitor = () => {
 
     // 5. Check meta tags
     try {
-      const response = await fetch('https://studentlogger.com');
+      const response = await fetch(`https://studentlogger.com?cb=${Date.now()}`, { cache: 'no-store' });
       const html = await response.text();
+
+      // Debug: Log HTML length and check for H1
+      console.log('HTML fetched, length:', html.length);
+      console.log('H1 tags found:', (html.match(/<h1[^>]*>/gi) || []).length);
+      console.log('First 500 chars:', html.substring(0, 500));
+
       const hasTitle = /<title>/.test(html);
       const hasDesc = /meta.*description/.test(html);
       const hasOg = /og:title/.test(html);
@@ -242,12 +248,13 @@ const SEOMonitor = () => {
         timestamp: new Date()
       };
     } catch (e) {
+      console.error('Error checking meta tags:', e);
       newMetrics.metaTags.timestamp = new Date();
     }
 
     // 6. Check JSON-LD schemas
     try {
-      const response = await fetch('https://studentlogger.com');
+      const response = await fetch(`https://studentlogger.com?cb=${Date.now()}`, { cache: 'no-store' });
       const html = await response.text();
       const jsonLdCount = (html.match(/"@context".*schema.org/g) || []).length;
       newMetrics.jsonLd.schemas = jsonLdCount;
@@ -271,7 +278,7 @@ const SEOMonitor = () => {
 
     // 8. Check security headers
     try {
-      const response = await fetch('https://studentlogger.com');
+      const response = await fetch(`https://studentlogger.com?cb=${Date.now()}`, { cache: 'no-store' });
       const headers = response.headers;
       newMetrics.security = {
         csp: !!headers.get('content-security-policy'),
@@ -286,7 +293,7 @@ const SEOMonitor = () => {
 
     // 9. Calculate accessibility score
     try {
-      const response = await fetch('https://studentlogger.com');
+      const response = await fetch(`https://studentlogger.com?cb=${Date.now()}`, { cache: 'no-store' });
       const html = await response.text();
       let a11yScore = 100;
       const issues = [];
