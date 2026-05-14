@@ -38,13 +38,21 @@ function LandingPage({ scrollToSection, activeSection }) {
 
   return (
     <div>
-      <a href="#main-content" className="skip-link">
+      <a
+        href="#main-content"
+        className="skip-link"
+        aria-label="Skip to main content"
+      >
         Skip to main content
       </a>
 
       <Navbar activeSection={activeSection} onNavigate={handleScrollToSection} />
 
-      <main ref={mainRef} id="main-content">
+      <main
+        ref={mainRef}
+        id="main-content"
+        role="main"
+      >
         <div ref={homeRef} tabIndex={-1}><Hero onCTA={handleScrollToSection} /></div>
         <div ref={aboutRef} tabIndex={-1}><About /></div>
         <div ref={valueRef} tabIndex={-1}><Value /></div>
