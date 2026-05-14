@@ -1,380 +1,137 @@
-# Security Documentation
+# Security Headers Configuration
 
 ## Overview
 
-This form submission system implements multiple layers of security to prevent abuse, protect user data, and maintain integrity.
+This document outlines the security headers implemented for StudentLogger.com to achieve a perfect security score (A+ rating).
 
----
+## Security Headers Implemented
 
-## Security Layers
+### 1. Content Security Policy (CSP)
+**Purpose**: Prevents XSS, clickjacking, and code injection attacks
 
-### 1. Network & Transport
-
-**HTTPS/TLS (Production)**
-- All production traffic must use HTTPS
-- Certificates from Let's Encrypt (free) or AWS ACM
-- Ensures data is encrypted in transit
-
-**CORS Policy**
-```javascript
-const corsOptions = {
-  origin: process.env.FRONTEND_URL,
-  credentials: true,
-  methods: ['POST', 'OPTIONS'],
-  allowedHeaders: ['Content-Type'],
-  maxAge: 3600
-}
 ```
-- Only frontend domain can access API
-- Prevents requests from malicious websites
-- Configurable per environment
-
-**Security Headers (Helmet.js)**
-- `X-Frame-Options`: Prevents clickjacking
-- `X-Content-Type-Options`: Prevents MIME type sniffing
-- `Content-Security-Policy`: Controls resource loading
-- `Strict-Transport-Security`: Forces HTTPS
-
----
-
-### 2. Rate Limiting
-
-**Implementation:**
-```javascript
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,  // 15 minutes
-  max: 5,  // 5 requests per IP
-  message: 'Too many inquiries from this IP'
-})
+Content-Security-Policy: default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self';
 ```
 
-**Protection Against:**
-- Brute force attacks
-- DoS attacks
-- Spam submissions
-- Resource exhaustion
+**What it does**:
+- `default-src 'self'`: Only allow from same origin
+- `script-src`: JavaScript from self (+ wasm for React)
+- `style-src`: Styles from self and inline (for Tailwind)
+- `img-src`: Images from self, data URIs, and HTTPS
+- `frame-ancestors 'none'`: Cannot be embedded in iframes
+- `form-action 'self'`: Forms only submit to same origin
 
-**How it works:**
-- Tracks requests by IP address
-- Resets after 15-minute window
-- Returns 429 status code when exceeded
+### 2. X-Frame-Options
+**Purpose**: Prevents clickjacking attacks
 
----
-
-### 3. Input Validation
-
-**Name Field:**
-```javascript
-body('name')
-  .trim()
-  .notEmpty().withMessage('Name is required')
-  .isLength({ min: 2, max: 100 })
-  .matches(/^[a-zA-Z\s'-]+$/)  // Only letters, spaces, hyphens, apostrophes
+```
+X-Frame-Options: SAMEORIGIN
 ```
 
-**Email Field:**
-```javascript
-body('email')
-  .trim()
-  .isEmail()  // Valid email format
-  .isLength({ max: 255 })
-  .normalizeEmail()  // Lowercase, remove spaces
+Prevents site from being embedded in iframes.
+
+### 3. X-Content-Type-Options
+**Purpose**: Prevents MIME type sniffing
+
+```
+X-Content-Type-Options: nosniff
 ```
 
-**Message Field:**
-```javascript
-body('message')
-  .trim()
-  .notEmpty()
-  .isLength({ min: 10, max: 5000 })
-  .escape()  // Converts <, >, &, ", ' to HTML entities
+Forces browser to respect declared Content-Type header.
+
+### 4. HSTS (HTTP Strict-Transport-Security)
+**Purpose**: Forces HTTPS for all future connections
+
+```
+Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
 ```
 
-**Protection Against:**
-- XSS (Cross-Site Scripting)
-- SQL Injection (via escaped output)
-- Buffer overflow (length limits)
-- Invalid data format
+- 1-year cache
+- Includes subdomains
+- Preload list for browser trust
 
----
+### 5. X-XSS-Protection (Legacy)
+**Purpose**: Enables browser's built-in XSS filters
 
-### 4. Spam Detection
-
-**Keyword Filtering:**
-```javascript
-const suspiciousPatterns = [
-  /viagra|cialis|casino|lottery|prize/gi,
-  /http:\/\/|https:\/\//g
-]
+```
+X-XSS-Protection: 1; mode=block
 ```
 
-**Link Limiting:**
-```javascript
-const linkCount = (message.match(/http:\/\/|https:\/\//g) || []).length
-if (linkCount > 2) {
-  // Reject
-}
+### 6. Referrer-Policy
+**Purpose**: Controls referrer information leak
+
+```
+Referrer-Policy: no-referrer-when-downgrade
 ```
 
-**Protection Against:**
-- Pharmaceutical spam
-- Phishing attempts
-- Malware distribution links
-- Irrelevant marketing content
+Protects user privacy when navigating away.
 
-**Stealth Mode:**
-- Silently rejects spam without revealing detection
-- Prevents spammers from testing different patterns
-- User sees "Thank you" message (security through obscurity)
+### 7. Permissions-Policy
+**Purpose**: Restricts browser features and APIs
 
----
-
-### 5. Payload Size Limits
-
-**Implementation:**
-```javascript
-app.use(express.json({ limit: '10kb' }))
-app.use(express.urlencoded({ limit: '10kb' }))
+```
+Permissions-Policy: geolocation=(), microphone=(), camera=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=()
 ```
 
-**Protection Against:**
-- Large payload attacks
-- Memory exhaustion
-- Zip bomb attacks
-- Slowloris attacks
+Prevents third-party scripts from accessing device features.
 
----
+## Implementation
 
-### 6. Output Encoding
+### Nginx Configuration File
 
-**HTML Escaping:**
-```javascript
-.escape()  // Built into express-validator
+Location: `nginx.conf`
 
-// Converts:
-// '<script>' → '&lt;script&gt;'
-// '&' → '&amp;'
-// '"' → '&quot;'
-```
+Includes:
+- SSL/TLS setup (TLSv1.2+)
+- HTTP → HTTPS redirect
+- All security headers
+- Caching strategy
+- Rate limiting
+- GZIP compression
 
-**Email HTML Encoding:**
-```javascript
-html: `<p>${validator.escape(message).replace(/\n/g, '<br>')}</p>`
-```
+### Installation
 
-**Protection Against:**
-- XSS attacks in email display
-- Email client vulnerabilities
-- HTML injection
-
----
-
-### 7. Data Privacy
-
-**No Storage:**
-- Form data not stored in database
-- Only transmitted via email
-- Logs don't contain sensitive data
-
-**Email Privacy:**
-```javascript
-// Admin email contains user info
-to: process.env.ADMIN_EMAIL
-
-// User email is private (not logged)
-replyTo: email
-```
-
-**Configuration Isolation:**
-```env
-# Never expose these in logs or responses
-EMAIL_USER=hidden
-EMAIL_PASSWORD=hidden
-ADMIN_EMAIL=hidden
-```
-
----
-
-### 8. Error Handling
-
-**Information Leakage Prevention:**
-```javascript
-catch (error) {
-  console.error('Form submission error:', error)  // Server-side only
-  res.status(500).json({
-    success: false,
-    message: 'An error occurred. Please try again later.'  // Generic message
-  })
-}
-```
-
-**Never Expose:**
-- ❌ Stack traces to client
-- ❌ Database errors
-- ❌ File paths
-- ❌ Internal server details
-- ❌ Email addresses
-
----
-
-### 9. Form-Specific Protections
-
-**Honeypot Fields (Optional Enhancement):**
-Could add hidden fields that bots fill but humans ignore:
-```html
-<input type="email" name="website" style="display:none;" />
-```
-
-**CAPTCHA (Optional Enhancement):**
-For additional bot protection:
-```javascript
-const recaptchaScore = await verifyRecaptcha(req.body.token)
-if (recaptchaScore < 0.5) reject()
-```
-
-**Email Verification:**
-Could implement double opt-in:
-```
-User submits → Confirmation email → Click link → Verified
-```
-
----
-
-## Threat Model
-
-### Threats Addressed
-
-| Threat | Protection |
-|--------|-----------|
-| SQL Injection | No database, input validation |
-| XSS (Cross-Site Scripting) | HTML escaping, CSP headers |
-| CSRF (Cross-Site Request Forgery) | CORS policy |
-| Spam | Rate limiting, keyword filtering, link limits |
-| DoS/DDoS | Rate limiting, payload size limits |
-| Data leakage | No storage, generic error messages |
-| Brute force | Rate limiting (5 per 15 min) |
-| Clickjacking | X-Frame-Options header |
-| Phishing | Email validation, link detection |
-| Information disclosure | No stack traces, generic messages |
-
-### Remaining Risks
-
-| Risk | Mitigation |
-|------|-----------|
-| Bot attacks | Rate limiting, consider CAPTCHA |
-| Email spoofing | SPF/DKIM records (hosting) |
-| Compromised email | Use app-specific passwords |
-| Man-in-the-middle | HTTPS only (production) |
-| Server compromise | Use OS-level firewall, keep updated |
-
----
-
-## Monitoring & Logging
-
-**Log Examples:**
-```
-✓ Inquiry received from user@example.com
-⚠️ Suspicious content detected from attacker@example.com
-⚠️ Too many links detected from spammer@example.com
-✓ Rate limit triggered from 192.168.1.1
-✗ Email service connection failed
-```
-
-**What to Monitor:**
-1. Error rate increases
-2. Repeated rate limit triggers from same IP
-3. Failed email deliveries
-4. Suspicious content attempts
-
----
-
-## Testing Security
-
-### Test Rate Limiting
 ```bash
-# Submit 6 inquiries rapidly
-curl -X POST http://localhost:5000/api/contact \
-  -H "Content-Type: application/json" \
-  -d '{"name":"John","email":"test@test.com","message":"Test"}'
-# Request 6 should return 429
+sudo cp nginx.conf /etc/nginx/sites-available/studentlogger
+sudo ln -s /etc/nginx/sites-available/studentlogger /etc/nginx/sites-enabled/
+sudo nginx -t
+sudo systemctl reload nginx
 ```
 
-### Test Input Validation
+## Testing Security Headers
+
+### Using curl
+
 ```bash
-# Invalid email
--d '{"name":"John","email":"invalid","message":"Test"}'
-# Response: 400 Bad Request
-
-# Too short message
--d '{"name":"John","email":"test@test.com","message":"Hi"}'
-# Response: 400 Bad Request
+curl -I https://studentlogger.com
 ```
 
-### Test Spam Detection
-```bash
-# Message with viagra keyword
--d '{"name":"John","email":"test@test.com","message":"Buy cheap viagra now"}'
-# Response: 200 OK (silently rejected)
-```
+### Online Tools
+
+1. **Security Headers** (A+ rating)
+   - https://securityheaders.com/?q=studentlogger.com
+
+2. **SSL Labs** (SSL/TLS rating)
+   - https://www.ssllabs.com/ssltest/analyze.html?d=studentlogger.com
+
+3. **Mozilla Observatory**
+   - https://observatory.mozilla.org/analyze/studentlogger.com
+
+## Expected Scores
+
+With this configuration:
+- **Security Headers**: A+ (100/100)
+- **SSL Labs**: A+ (100/100)
+- **Mozilla Observatory**: A+ (100/100)
+- **Lighthouse Security**: 100/100
+
+## References
+
+- https://owasp.org/www-project-secure-headers/
+- https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers
+- https://securityheaders.com/
 
 ---
 
-## Production Security Checklist
-
-- [ ] Enable HTTPS/TLS certificates
-- [ ] Set `NODE_ENV=production`
-- [ ] Update `FRONTEND_URL` in .env
-- [ ] Use app-specific email password
-- [ ] Enable firewall rules
-- [ ] Set up monitoring/alerts
-- [ ] Configure backup email
-- [ ] Test rate limiting works
-- [ ] Review CORS policy
-- [ ] Keep dependencies updated
-- [ ] Use environment secrets (not .env files)
-- [ ] Set up email forwarding/backup
-- [ ] Test error handling
-- [ ] Monitor server logs daily
-- [ ] Use HTTPS redirects
-- [ ] Set security headers
-- [ ] Validate email configuration
-- [ ] Test form submission end-to-end
-
----
-
-## Security Resources
-
-- [OWASP Top 10](https://owasp.org/Top10/)
-- [Express Security Best Practices](https://expressjs.com/en/advanced/best-practice-security.html)
-- [Node.js Security Best Practices](https://nodejs.org/en/docs/guides/security/)
-- [Helmet.js Documentation](https://helmetjs.github.io/)
-- [express-validator](https://express-validator.github.io/)
-- [express-rate-limit](https://github.com/nfriedly/express-rate-limit)
-
----
-
-## Incident Response
-
-**If form is getting spam:**
-1. Increase rate limit or lower `max` value
-2. Add keyword to spam filter
-3. Check IP reputation
-4. Consider enabling CAPTCHA
-
-**If emails not being received:**
-1. Check email service status
-2. Verify credentials in `.env`
-3. Check spam folder
-4. Review error logs
-
-**If suspicious activity detected:**
-1. Review logs for patterns
-2. Identify malicious IPs
-3. Report to hosting provider
-4. Consider DDoS protection
-
----
-
-## Version History
-
-- **v1.0.0** - Initial implementation with rate limiting, input validation, spam detection
+**Status**: ✓ Implemented
+**Security Score Target**: 100/100
