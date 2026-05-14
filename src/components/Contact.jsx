@@ -86,7 +86,7 @@ export default function Contact() {
 
         {submitted && (
           <div className="success-message" role="status" aria-live="polite">
-            ✓ Thank you! Check your email for confirmation.
+            <span aria-label="success check mark">✓</span> Thank you! Check your email for confirmation.
           </div>
         )}
 

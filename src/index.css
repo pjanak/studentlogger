@@ -471,6 +471,76 @@ body {
   }
 }
 
+/* ===== FAQ Section (Mobile-First) ===== */
+.faq {
+  padding: 2rem 1rem;
+  background: white;
+}
+
+.faq h2 {
+  font-size: 1.8rem;
+  margin-bottom: 1.5rem;
+  margin-top: 0;
+  color: var(--dark-color);
+  text-align: center;
+  line-height: var(--line-height-heading);
+  font-weight: 700;
+}
+
+.faq-list {
+  max-width: 800px;
+  margin: 2rem auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.faq-item {
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  padding: 0;
+  background: white;
+  transition: all 0.2s ease;
+}
+
+.faq-item:hover,
+.faq-item:focus-within {
+  border-color: var(--primary-color);
+  box-shadow: var(--shadow-lg);
+}
+
+.faq-question {
+  display: block;
+  padding: 1.25rem;
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--primary-color);
+  font-size: 1rem;
+  user-select: none;
+  line-height: var(--line-height-body);
+}
+
+.faq-question:hover,
+.faq-question:focus {
+  outline: none;
+}
+
+.faq-item[open] .faq-question {
+  color: var(--primary-color);
+  border-bottom: 2px solid var(--border-color);
+  padding-bottom: 1rem;
+  margin-bottom: 0;
+}
+
+.faq-answer {
+  padding: 0 1.25rem 1.25rem 1.25rem;
+  margin: 0;
+  color: var(--text-secondary);
+  line-height: var(--line-height-body);
+  font-size: 0.95rem;
+  animation: slideIn 0.2s ease-out;
+}
+
 /* ===== Footer ===== */
 .footer {
   background: var(--dark-color);
@@ -598,6 +668,143 @@ body {
 
   html {
     font-size: 18px;
+  }
+}
+
+/* Dark mode support for accessibility */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --primary-color: #5b7cfa;        /* Lighter blue for dark mode */
+    --primary-light: #748ffc;
+    --secondary-color: #51cf66;      /* Lighter green */
+    --dark-color: #e9ecef;           /* Light gray for headings */
+    --light-color: #1a1b1e;          /* Dark background */
+    --text-color: #e9ecef;           /* Light text */
+    --text-secondary: #a6adba;       /* Medium gray text */
+    --border-color: #373a40;         /* Dark border */
+    --focus-color: #ffd700;          /* Keep bright yellow for focus */
+  }
+
+  body {
+    background-color: #0f1014;
+    color: var(--text-color);
+  }
+
+  .navbar {
+    background: #1a1b1e;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .about,
+  .uses {
+    background-color: #1a1b1e;
+  }
+
+  .about p,
+  .use-item {
+    color: var(--text-secondary);
+  }
+
+  .value-card,
+  .use-item {
+    background: #252629;
+    border-color: var(--border-color);
+  }
+
+  .value-card:hover,
+  .value-card:focus-within,
+  .use-item:hover {
+    border-color: var(--primary-color);
+    background: #2d2e33;
+  }
+
+  .contact-form {
+    background: #252629;
+    border-color: var(--border-color);
+  }
+
+  .form-group input,
+  .form-group textarea {
+    background-color: #1a1b1e;
+    border-color: var(--border-color);
+    color: var(--text-color);
+  }
+
+  .form-group input::placeholder,
+  .form-group textarea::placeholder {
+    color: var(--text-secondary);
+  }
+
+  .form-group label {
+    color: var(--text-color);
+  }
+
+  .form-group input:focus,
+  .form-group textarea:focus {
+    border-color: var(--primary-color);
+  }
+
+  .contact-info a {
+    color: var(--primary-color);
+  }
+
+  .hero {
+    background: linear-gradient(135deg, #3d5ca3 0%, #1f3a93 100%);
+  }
+
+  .btn-primary {
+    background: #252629;
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+  }
+
+  .btn-primary:hover {
+    background: #2d2e33;
+  }
+
+  .nav-link:hover,
+  .nav-link:focus-visible {
+    background-color: rgba(91, 124, 250, 0.1);
+  }
+
+  .nav-link.active {
+    background-color: var(--primary-color);
+    color: #0f1014;
+  }
+
+  .skip-link {
+    background: var(--primary-color);
+    color: #0f1014;
+  }
+
+  .value-icon {
+    filter: brightness(1.1);
+  }
+
+  .faq {
+    background: #1a1b1e;
+  }
+
+  .faq h2 {
+    color: var(--text-color);
+  }
+
+  .faq-item {
+    background: #252629;
+    border-color: var(--border-color);
+  }
+
+  .faq-item:hover,
+  .faq-item:focus-within {
+    background: #2d2e33;
+  }
+
+  .faq-question {
+    color: var(--primary-color);
+  }
+
+  .faq-answer {
+    color: var(--text-secondary);
   }
 }
 
