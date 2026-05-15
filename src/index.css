@@ -51,14 +51,16 @@ body {
   color: white;
   padding: 12px 16px;
   text-decoration: none;
-  z-index: 1000;
+  z-index: 9999;
   border-radius: 0 0 4px 0;
   font-weight: 600;
   font-size: 1rem;
   display: inline-block;
   border: 2px solid white;
+  transition: top 0.2s ease;
 }
 
+.skip-link:hover,
 .skip-link:focus,
 .skip-link:focus-visible {
   top: 0;
@@ -567,10 +569,136 @@ body {
   padding-right: 1rem;
 }
 
+/* ===== Mobile Hamburger Menu ===== */
+.hamburger-menu {
+  display: none;
+  flex-direction: column;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  min-width: 44px;
+  min-height: 44px;
+  gap: 6px;
+  align-items: center;
+  justify-content: center;
+  z-index: 9998;
+}
+
+.hamburger-line {
+  width: 24px;
+  height: 3px;
+  background-color: var(--primary-color);
+  border-radius: 2px;
+  transition: all 0.3s ease;
+  display: block;
+}
+
+.hamburger-menu:focus-visible {
+  outline: 3px solid var(--focus-color);
+  outline-offset: 2px;
+}
+
+/* Mobile: Show hamburger menu */
+@media (max-width: 639px) {
+  .hamburger-menu {
+    display: flex;
+  }
+
+  .nav-menu {
+    position: absolute;
+    top: 60px;
+    left: 0;
+    right: 0;
+    background: white;
+    flex-direction: column;
+    padding: 0;
+    box-shadow: var(--shadow-lg);
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+    border-radius: 0 0 8px 8px;
+  }
+
+  .nav-menu.open {
+    max-height: 400px;
+    padding: 1rem 0;
+  }
+
+  .nav-menu li {
+    width: 100%;
+  }
+
+  .nav-link {
+    width: 100%;
+    justify-content: flex-start;
+    padding: 1rem 1.5rem;
+    border: none;
+    border-radius: 0;
+    font-size: 1rem;
+    color: var(--text-color);
+  }
+
+  .nav-link:hover {
+    background-color: rgba(31, 58, 147, 0.08);
+  }
+
+  .nav-link:focus-visible {
+    outline: 3px solid var(--focus-color);
+    outline-offset: -3px;
+    background-color: rgba(31, 58, 147, 0.08);
+  }
+
+  .nav-link.active {
+    background-color: var(--primary-color);
+    color: white;
+    border-left: 4px solid var(--focus-color);
+    padding-left: calc(1.5rem - 4px);
+  }
+
+  /* Mobile section spacing */
+  .hero {
+    padding: 2.5rem 1rem;
+  }
+
+  .hero-content h1 {
+    font-size: 1.75rem;
+  }
+
+  .hero-cta {
+    gap: 0.75rem;
+  }
+
+  .btn {
+    width: 100%;
+    min-height: 48px;
+  }
+
+  /* Mobile form improvements */
+  input,
+  textarea {
+    min-height: 48px;
+  }
+
+  .form-group {
+    margin-bottom: 1.25rem;
+  }
+}
+
 /* ===== Responsive Design (Mobile-First) ===== */
 
 /* Tablets: 640px and up */
 @media (min-width: 640px) {
+  .hamburger-menu {
+    display: none;
+  }
+
+  .nav-menu {
+    display: flex;
+    max-height: none;
+    box-shadow: none;
+    position: static;
+  }
   :root {
     --font-heading-h1: 3rem;
     --font-heading-h2: 2.3rem;
