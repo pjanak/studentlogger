@@ -8,11 +8,13 @@ import Uses from './components/Uses'
 import FAQ from './components/FAQ'
 import Contact from './components/Contact'
 import Footer from './components/Footer'
+import Dashboard from './components/Dashboard'
+import DemoBanner from './components/DemoBanner'
 
 // Lazy load the SEO Monitor page for better code splitting
 const SEOMonitor = lazy(() => import('./pages/SEOMonitor'))
 
-function LandingPage({ scrollToSection, activeSection }) {
+function LandingPage({ scrollToSection, activeSection, userRole, setUserRole }) {
   const homeRef = useRef(null)
   const aboutRef = useRef(null)
   const valueRef = useRef(null)
@@ -38,6 +40,7 @@ function LandingPage({ scrollToSection, activeSection }) {
 
   return (
     <div>
+      <DemoBanner />
       <a
         href="#main-content"
         className="skip-link"
@@ -54,6 +57,7 @@ function LandingPage({ scrollToSection, activeSection }) {
         role="main"
       >
         <div ref={homeRef} tabIndex={-1}><Hero onCTA={handleScrollToSection} /></div>
+        <Dashboard userRole={userRole} setUserRole={setUserRole} />
         <div ref={aboutRef} tabIndex={-1}><About /></div>
         <div ref={valueRef} tabIndex={-1}><Value /></div>
         <Uses />
@@ -68,6 +72,7 @@ function LandingPage({ scrollToSection, activeSection }) {
 
 function App() {
   const [activeSection, setActiveSection] = useState('home')
+  const [userRole, setUserRole] = useState('teacher')
 
   // Set color-scheme based on user's system preference
   useEffect(() => {
@@ -87,7 +92,7 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<LandingPage scrollToSection={setActiveSection} activeSection={activeSection} />} />
+        <Route path="/" element={<LandingPage scrollToSection={setActiveSection} activeSection={activeSection} userRole={userRole} setUserRole={setUserRole} />} />
         <Route
           path="/admin/seo-monitor"
           element={

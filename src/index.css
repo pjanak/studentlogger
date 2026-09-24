@@ -174,8 +174,16 @@ body {
 
 .tagline {
   font-size: 1.1rem;
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
   opacity: 0.98;
+  max-width: 100%;
+  line-height: 1.6;
+}
+
+.hero-description {
+  font-size: 1rem;
+  margin-bottom: 2rem;
+  opacity: 0.95;
   max-width: 100%;
   line-height: 1.6;
 }
